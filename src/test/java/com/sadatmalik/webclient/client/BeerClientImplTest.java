@@ -14,6 +14,8 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -82,6 +84,26 @@ class BeerClientImplTest {
     }
 
     @Test
+    void functionalTestGetBeerById() throws InterruptedException {
+        AtomicReference<String> beerName = new AtomicReference<>();
+        CountDownLatch countDownLatch = new CountDownLatch(1); // very useful in testing - instead of Thread.sleep
+
+        beerClient.listBeers(null, null,
+                null, null, null)
+                .map(beerPagedList -> beerPagedList.stream().findFirst().get().getId())
+                .map(beerId -> beerClient.getBeerById(beerId, false))
+                .flatMap(mono -> mono)
+                .subscribe(beer -> {
+                    System.out.println(beer.getBeerName());
+                    beerName.set(beer.getBeerName());
+                    countDownLatch.countDown();
+                });
+
+        countDownLatch.await();
+        assertThat(beerName.get()).isEqualTo("Mango Bobs");
+    }
+
+        @Test
     void getBeerByIdShowInventoryTrue() {
         Mono<BeerPagedList> beerPagedListMono = beerClient.listBeers(null, null,
                 null, null, true);
