@@ -147,11 +147,20 @@ class BeerClientImplTest {
 
         Mono<ResponseEntity<Void>> responseEntityMono = beerClient.updateBeerById(beer.getId(), updatedBeer);
         ResponseEntity<Void> responseEntity = responseEntityMono.block();
-
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
     }
 
     @Test
     void deleteBeerById() {
+        Mono<BeerPagedList> beerPagedListMono = beerClient.listBeers(null, null,
+                null, null, null);
+
+        BeerPagedList beerPagedList = beerPagedListMono.block();
+        Optional<Beer> beerOptional = beerPagedList.stream().findFirst();
+        Beer beer = beerOptional.get();
+
+        Mono<ResponseEntity<Void>> responseEntityMono = beerClient.deleteBeerById(beer.getId());
+        ResponseEntity<Void> responseEntity = responseEntityMono.block();
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
     }
 }
